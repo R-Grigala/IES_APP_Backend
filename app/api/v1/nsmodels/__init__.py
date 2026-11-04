@@ -6,3 +6,9 @@ from app.api.v1.nsmodels.felt_reports import (
     felt_report_parser,
     felt_reports_ns,
 )
+from app.api.v1.nsmodels.location_settings import (
+    location_settings_ns,
+    location_sharing_parser,
+    location_parser,
+    location_settings_error_model,
+)
