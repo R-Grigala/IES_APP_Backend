@@ -81,6 +81,72 @@ def upgrade_db_core():
     added = []
 
     with db.engine.begin() as connection:
+        if inspector.has_table("devices") and inspector.has_table("location_settings"):
+            device_columns = {
+                column["name"] for column in inspector.get_columns("devices")
+            }
+            legacy_location_columns = (
+                "location_sharing_enabled",
+                "location_sharing_updated_at",
+                "last_latitude",
+                "last_longitude",
+                "last_accuracy",
+                "last_location_at",
+            )
+
+            if device_columns.intersection(legacy_location_columns):
+                select_values = [quote("device_id")]
+                for column_name in legacy_location_columns:
+                    if column_name in device_columns:
+                        value = quote(column_name)
+                        if column_name == "location_sharing_enabled":
+                            value = f"COALESCE({value}, FALSE)"
+                    elif column_name == "location_sharing_enabled":
+                        value = "FALSE"
+                    else:
+                        value = "NULL"
+                    select_values.append(value)
+                location_value_columns = tuple(
+                    name
+                    for name in (
+                        "last_latitude",
+                        "last_longitude",
+                        "last_location_at",
+                    )
+                    if name in device_columns
+                )
+                if "updated_at" in device_columns and location_value_columns:
+                    has_location = " OR ".join(
+                        f"{quote(name)} IS NOT NULL"
+                        for name in location_value_columns
+                    )
+                    select_values.append(
+                        f"CASE WHEN {has_location} "
+                        f"THEN {quote('updated_at')} ELSE NULL END"
+                    )
+                elif "last_location_at" in device_columns:
+                    select_values.append(quote("last_location_at"))
+                else:
+                    select_values.append("NULL")
+
+                location_settings_columns = (
+                    *legacy_location_columns,
+                    "last_location_updated_at",
+                )
+
+                target_columns = ", ".join(
+                    quote(name)
+                    for name in ("device_id", *location_settings_columns)
+                )
+                connection.execute(
+                    sa.text(
+                        f"INSERT INTO {quote('location_settings')} "
+                        f"({target_columns}) SELECT "
+                        f"{', '.join(select_values)} FROM {quote('devices')} "
+                        f"ON CONFLICT ({quote('device_id')}) DO NOTHING"
+                    )
+                )
+
         for table in db.metadata.sorted_tables:
             if not inspector.has_table(table.name):
                 continue

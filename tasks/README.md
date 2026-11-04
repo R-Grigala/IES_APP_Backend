@@ -1,6 +1,6 @@
 # აპის ცხრილები
 
-ამ ბაზაშია `devices`, `alert_settings`, `earthquakes`, `felt_reports`, `notification_outbox` და `notification_attempts`. მიწისძვრას უშვებს ies_monitoring. აქ ის ერთხელ ინახება, რევიზიების გარეშე.
+ამ ბაზაშია `devices`, `location_settings`, `alert_settings`, `earthquakes`, `felt_reports`, `notification_outbox` და `notification_attempts`. მიწისძვრას უშვებს ies_monitoring. აქ ის ერთხელ ინახება, რევიზიების გარეშე.
 
 გამოქვეყნებული მიწისძვრა უკვე აწყობილია [iesdata](https://iesdata.iliauni.edu.ge:3030/en/)-ზე. ინფორმაციას ვკითხულობთ საკუთარი endpoint-იდან:
 

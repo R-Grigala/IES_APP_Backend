@@ -2,7 +2,7 @@
 
 ## რას ვაკეთებთ
 
-PostGIS და ეს ცხრილები: `devices`, `alert_settings`, `earthquakes`, `felt_reports`, `notification_outbox`, `notification_attempts`.
+PostGIS და ეს ცხრილები: `devices`, `location_settings`, `alert_settings`, `earthquakes`, `felt_reports`, `notification_outbox`, `notification_attempts`.
 
 `regions` და რევიზიები არ იქმნება. მიწისძვრას უშვებს ies_monitoring. აქ ინახება ერთი ჩანაწერი: დრო, კოორდინატები, ადგილი, `is_automatic` და არჩეული მაგნიტუდა.
 
@@ -15,6 +15,7 @@ PostGIS და ეს ცხრილები: `devices`, `alert_settings`, `ea
 - `created_by` და `updated_by` არის `user` ან `service` და სახელი. `updated_at` ივსება მაშინ, როცა განახლების ავტორიც მოდის.
 - `notification_outbox` ერთ მიწისძვრასა და მოწყობილობას ერთ ტიპზე ერთხელ წერს. Expo-ს პასუხი `notification_attempts`-შია.
 - `area_source` არის მხოლოდ `custom` ან `circle`.
+- `location_settings` ინახავს თითო მოწყობილობის გაზიარების პარამეტრს, ბოლო კოორდინატებს, მოწყობილობიდან მოსულ დროს (`last_location_at`) და ბაზაში ბოლო განახლების დროს (`last_location_updated_at`). `device_id` ერთდროულად PK და `devices.device_id`-ზე FK-ია; მოწყობილობის წაშლისას პარამეტრებიც იშლება.
 
 ## მზადაა, როცა
 
