@@ -7,14 +7,13 @@ The database password stays in `.env`. The app role is not the `postgres` superu
 ```bash
 bash scripts/bootstrap_db.sh
 venv/bin/flask --app run init_db --confirm-text RESET_DB
-venv/bin/flask --app run update_db
 venv/bin/flask --app run populate_db
 venv/bin/python run.py
 ```
 
 `bootstrap_db.sh` sudo-ს პაროლს გთხოვს, `.env`-ის როლსა და ბაზას ქმნის და PostGIS-ს აყენებს.
 
-`init_db` ცხრილებს თავიდან ქმნის და `--confirm-text RESET_DB` სჭირდება. Production-ში დამატებით `--force` უნდა გადასცე. `update_db` მიმდინარე მოდელებიდან ქმნის არმყოფ ცხრილებს; მონაცემებს არ შლის. `populate_db` ერთ სატესტო მოწყობილობას წერს თბილისის 120 კმ წრით, ერთ FCM token-ს, ერთ შენახულ მიწისძვრას, ერთ felt ანგარიშს და ერთ შეტყობინებას `notification_outbox`-ში. `event_id` უახლოესი გამოქვეყნებული მიწისძვრის `event.id`-ია და `earthquakes.ies_event_id`-ში ინახება. ხელახლა გაშვება იმავე ჩანაწერს არ იმეორებს.
+`init_db` ცხრილებს თავიდან ქმნის და `--confirm-text RESET_DB` სჭირდება. Production-ში დამატებით `--force` უნდა გადასცე. `populate_db` ქმნის ერთ სატესტო მოწყობილობას, მის FCM token-ს, თბილისის 120 კმ alert area-ს, ერთ შენახულ მიწისძვრას, ერთ felt ანგარიშს და ერთ შეტყობინებას `notification_outbox`-ში. `event_id` უახლოესი გამოქვეყნებული მიწისძვრის `event.id`-ია და `earthquakes.ies_event_id`-ში ინახება. ხელახლა გაშვება იმავე ჩანაწერს არ იმეორებს.
 
 Swagger: `http://127.0.0.1:5000/docs/`
 
