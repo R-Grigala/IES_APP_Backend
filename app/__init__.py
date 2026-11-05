@@ -1,11 +1,11 @@
 from flask import Flask, request
 
-from app.commands import init_db, populate_db, update_db
+from app.commands import init_db, populate_db
 from app.config import get_config
 from app.extensions import api as restx_api
 from app.extensions import db, migrate
 
-COMMANDS = [init_db, update_db, populate_db]
+COMMANDS = [init_db, populate_db]
 
 
 def create_app(config_object=None):

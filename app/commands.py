@@ -66,12 +66,6 @@ def init_db_core():
     db.create_all()
 
 
-def update_db_core():
-    """Create any tables declared by the current SQLAlchemy models."""
-    _ensure_postgis()
-    db.create_all()
-
-
 def _km(lat1, lon1, lat2, lon2):
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
@@ -167,14 +161,19 @@ def populate_db_core():
             app_version=spec["app_version"],
         )
         device.create(commit=False)
+        click.echo(f"Created sample device: {spec['device_id']}")
+    else:
+        click.echo("Sample device already exists.")
+
+    if FcmToken.query.filter_by(device_id=spec["device_id"]).first() is None:
         FcmToken(
             device_id=spec["device_id"],
             fcm_token=spec["fcm_token"],
             notifications_enabled=True,
         ).create(commit=False)
-        click.echo(f"Created sample device: {spec['device_id']}")
+        click.echo("Created sample FCM token.")
     else:
-        click.echo("Sample device already exists.")
+        click.echo("Sample FCM token already exists.")
 
     if db.session.get(AlertSettings, spec["device_id"]) is None:
         AlertSettings(
@@ -331,14 +330,6 @@ def init_db(force, confirm_text):
     click.echo("Creating Database")
     init_db_core()
     click.echo("Database Created")
-
-
-@click.command("update_db")
-@with_appcontext
-def update_db():
-    """CLI: create tables declared by the current models."""
-    update_db_core()
-    click.echo("Database schema is up to date.")
 
 
 @click.command("populate_db")
