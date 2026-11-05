@@ -97,7 +97,6 @@ class Device(db.Model, BaseModel):
     def to_dict(self):
         return {
             "device_id": str(self.device_id),
-            "fcm_tokens": [token.to_dict() for token in self.fcm_tokens],
             "platform": self.platform,
             "language": self.language,
             "app_version": self.app_version,

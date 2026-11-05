@@ -2,7 +2,7 @@
 
 ## რას ვაკეთებთ
 
-PostGIS და ეს ცხრილები: `devices`, `location_settings`, `alert_settings`, `earthquakes`, `felt_reports`, `notification_outbox`, `notification_attempts`.
+PostGIS და ეს ცხრილები: `devices`, `fcm_tokens`, `location_settings`, `alert_settings`, `earthquakes`, `felt_reports`, `notification_outbox`, `notification_attempts`.
 
 `regions` და რევიზიები არ იქმნება. მიწისძვრას უშვებს ies_monitoring. აქ ინახება ერთი ჩანაწერი: დრო, კოორდინატები, ადგილი, `is_automatic` და არჩეული მაგნიტუდა.
 

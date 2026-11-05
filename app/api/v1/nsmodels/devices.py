@@ -1,7 +1,6 @@
 from flask_restx import fields, reqparse
 
 from app.extensions import api
-from app.api.v1.nsmodels.fcm_tokens import fcm_token_model
 
 devices_ns = api.namespace("Devices", description="Installed application devices", path="/api/v1")
 
@@ -17,7 +16,6 @@ device_model = devices_ns.model(
     "Device",
     {
         "device_id": fields.String(required=True, example="11111111-1111-1111-1111-111111111111"),
-        "fcm_tokens": fields.List(fields.Nested(fcm_token_model), required=True),
         "platform": fields.String(required=True, example="android", enum=["ios", "android", "web"]),
         "language": fields.String(required=True, example="ka", enum=["ka", "en"]),
         "app_version": fields.String(required=False, example="1.0.0"),
