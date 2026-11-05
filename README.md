@@ -17,6 +17,8 @@ venv/bin/python run.py
 
 Swagger: `http://127.0.0.1:5000/docs/`
 
+დეტალური დოკუმენტაცია იხილე [docs/](docs/README.md)-ში.
+
 | Method | Path | Stores |
 | --- | --- | --- |
 | GET | `/api/v1/devices/` | stored devices (`?limit=`) |
