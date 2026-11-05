@@ -82,10 +82,11 @@ def _matching_device_ids(earthquake):
             SELECT d.device_id
             FROM alert_settings AS a
             JOIN devices AS d ON d.device_id = a.device_id
+            JOIN fcm_tokens AS ft ON ft.device_id = d.device_id
             WHERE a.enabled
               AND d.is_active
               AND a.min_magnitude <= :magnitude
-              AND d.push_token IS NOT NULL
+              AND ft.notifications_enabled
               AND ST_Intersects(
                     a.area,
                     ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)

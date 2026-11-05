@@ -1,5 +1,6 @@
 from app.models.alert_settings import AlertSettings
 from app.models.devices import Device
+from app.models.fcm_tokens import FcmToken
 from app.models.earthquakes import Earthquake
 from app.models.felt_reports import FeltReport
 from app.models.location_settings import LocationSettings
@@ -9,6 +10,7 @@ from app.models.notification_outbox import NotificationOutbox
 __all__ = [
     "AlertSettings",
     "Device",
+    "FcmToken",
     "Earthquake",
     "FeltReport",
     "LocationSettings",

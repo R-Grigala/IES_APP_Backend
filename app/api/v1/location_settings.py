@@ -92,7 +92,7 @@ def _save_device_location(device_id):
     return _location_response(device, settings), 200
 
 
-@location_settings_ns.route("/location/<string:device_id>/")
+@location_settings_ns.route("/devices/<string:device_id>/location/")
 class LocationSettingsApi(Resource):
 
     @location_settings_ns.marshal_with(location_response_model)
