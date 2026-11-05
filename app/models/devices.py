@@ -19,12 +19,6 @@ class Device(db.Model, BaseModel):
     # Device identification
     device_id = db.Column(db.Uuid, primary_key=True)
 
-    push_token = db.Column(
-        db.Text,
-        unique=True,
-        nullable=True,
-    )
-
     platform = db.Column(
         db.Text,
         nullable=False,
@@ -93,11 +87,17 @@ class Device(db.Model, BaseModel):
         cascade="all, delete-orphan",
     )
 
+    fcm_tokens = db.relationship(
+        "FcmToken",
+        back_populates="device",
+        cascade="all, delete-orphan",
+    )
+
     # Serialization
     def to_dict(self):
         return {
             "device_id": str(self.device_id),
-            "push_token": self.push_token,
+            "fcm_tokens": [token.to_dict() for token in self.fcm_tokens],
             "platform": self.platform,
             "language": self.language,
             "app_version": self.app_version,
@@ -120,6 +120,7 @@ class Device(db.Model, BaseModel):
                 if self.updated_at
                 else None
             ),
+
         }
 
     def __repr__(self):

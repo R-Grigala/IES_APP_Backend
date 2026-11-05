@@ -73,39 +73,26 @@ class DevicesApi(Resource):
         except (TypeError, ValueError):
             return {"error": "validation_error", "message": "device_id must be a UUID."}, 400
 
-        push_token = _clean(args.get("push_token"))
         app_version = _clean(args.get("app_version"))
-        if push_token is not None and len(push_token) > 4096:
-            return {"error": "validation_error", "message": "push_token is too long."}, 400
         if app_version is not None and len(app_version) > 64:
             return {"error": "validation_error", "message": "app_version is too long."}, 400
 
-        if push_token:
-            holder = Device.query.filter(
-                Device.push_token == push_token,
-                Device.device_id != device_id,
-            ).first()
-            if holder is not None:
-                holder.push_token = None
-                db.session.flush()
-
         device = db.session.get(Device, device_id)
         created = device is None
+        now = db.session.scalar(db.select(db.func.now()))
         if device is None:
             device = Device(
                 device_id=device_id,
-                push_token=push_token,
                 platform=args["platform"],
                 language=args.get("language") or "ka",
                 app_version=app_version,
             )
             db.session.add(device)
         else:
-            device.push_token = push_token
             device.platform = args["platform"]
             device.language = args.get("language") or "ka"
             device.app_version = app_version
-            device.last_seen_at = db.session.scalar(db.select(db.func.now()))
+            device.last_seen_at = now
             device.updated_at = device.last_seen_at
 
         try:

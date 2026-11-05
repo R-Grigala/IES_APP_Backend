@@ -17,17 +17,18 @@
 1. `alert_settings` აქვს და `enabled` ჭეშმარიტია. ჩანაწერის გარეშე შეტყობინება არ ეგზავნება.
 2. არჩეული მაგნიტუდა `min_magnitude`-ზე ნაკლები არ არის.
 3. ეპიცენტრი ხვდება `area`-ში. `custom` და `circle` ერთნაირად მოწმდება, ორივე უკვე `MultiPolygon`-ია.
-4. მოწყობილობა აქტიურია, `push_token` შევსებულია, და ეს მიწისძვრა ამ მოწყობილობაზე ჯერ არ დევს `notification_outbox`-ში.
+4. მოწყობილობა აქტიურია, აქვს ჩართული FCM token, და ეს მიწისძვრა ამ მოწყობილობაზე ჯერ არ დევს `notification_outbox`-ში.
 
 არჩევა PostGIS-ში ხდება, აპის კოდში პოლიგონების ჩამოთვლით არა. გრძედი პირველია, განედი მეორე:
 
 ```sql
-SELECT d.device_id, d.push_token, d.language
+SELECT d.device_id, ft.fcm_token, d.language
 FROM alert_settings AS a
 JOIN devices AS d ON d.device_id = a.device_id
+JOIN fcm_tokens AS ft ON ft.device_id = d.device_id
 WHERE a.enabled
   AND a.min_magnitude <= :magnitude
-  AND d.push_token IS NOT NULL
+  AND ft.notifications_enabled
   AND ST_Intersects(
         a.area,
         ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)

@@ -15,6 +15,7 @@ from app.extensions import db
 from app.models import (
     AlertSettings,
     Device,
+    FcmToken,
     Earthquake,
     FeltReport,
     NotificationAttempt,
@@ -27,7 +28,7 @@ PUBLISH_EVENTS_URL = "https://iesdata.iliauni.edu.ge:3030/api/publish_events/?li
 # Stable id so a second populate_db does not insert the same row again.
 SAMPLE_DEVICE = {
     "device_id": UUID("11111111-1111-4111-8111-111111111101"),
-    "push_token": "ExponentPushToken[sample-tbilisi-android]",
+    "fcm_token": "sample-fcm-token-tbilisi-android",
     "platform": "android",
     "language": "ka",
     "app_version": "1.2.0",
@@ -65,122 +66,10 @@ def init_db_core():
     db.create_all()
 
 
-def upgrade_db_core():
-    """
-    Bring an existing database up to the models without losing data.
-
-    Creates missing tables and adds missing nullable columns. Existing columns are
-    never changed or dropped; a missing NOT NULL column needs a manual migration.
-    Returns the list of added "table.column" names.
-    """
+def update_db_core():
+    """Create any tables declared by the current SQLAlchemy models."""
     _ensure_postgis()
     db.create_all()
-    inspector = sa.inspect(db.engine)
-    dialect = db.engine.dialect
-    quote = dialect.identifier_preparer.quote
-    added = []
-
-    with db.engine.begin() as connection:
-        if inspector.has_table("devices") and inspector.has_table("location_settings"):
-            device_columns = {
-                column["name"] for column in inspector.get_columns("devices")
-            }
-            legacy_location_columns = (
-                "location_sharing_enabled",
-                "location_sharing_updated_at",
-                "last_latitude",
-                "last_longitude",
-                "last_accuracy",
-                "last_location_at",
-            )
-
-            if device_columns.intersection(legacy_location_columns):
-                select_values = [quote("device_id")]
-                for column_name in legacy_location_columns:
-                    if column_name in device_columns:
-                        value = quote(column_name)
-                        if column_name == "location_sharing_enabled":
-                            value = f"COALESCE({value}, FALSE)"
-                    elif column_name == "location_sharing_enabled":
-                        value = "FALSE"
-                    else:
-                        value = "NULL"
-                    select_values.append(value)
-                location_value_columns = tuple(
-                    name
-                    for name in (
-                        "last_latitude",
-                        "last_longitude",
-                        "last_location_at",
-                    )
-                    if name in device_columns
-                )
-                if "updated_at" in device_columns and location_value_columns:
-                    has_location = " OR ".join(
-                        f"{quote(name)} IS NOT NULL"
-                        for name in location_value_columns
-                    )
-                    select_values.append(
-                        f"CASE WHEN {has_location} "
-                        f"THEN {quote('updated_at')} ELSE NULL END"
-                    )
-                elif "last_location_at" in device_columns:
-                    select_values.append(quote("last_location_at"))
-                else:
-                    select_values.append("NULL")
-
-                location_settings_columns = (
-                    *legacy_location_columns,
-                    "last_location_updated_at",
-                )
-
-                target_columns = ", ".join(
-                    quote(name)
-                    for name in ("device_id", *location_settings_columns)
-                )
-                connection.execute(
-                    sa.text(
-                        f"INSERT INTO {quote('location_settings')} "
-                        f"({target_columns}) SELECT "
-                        f"{', '.join(select_values)} FROM {quote('devices')} "
-                        f"ON CONFLICT ({quote('device_id')}) DO NOTHING"
-                    )
-                )
-
-        for table in db.metadata.sorted_tables:
-            if not inspector.has_table(table.name):
-                continue
-            existing = {column["name"] for column in inspector.get_columns(table.name)}
-            for column in table.columns:
-                if column.name in existing:
-                    continue
-                if not column.nullable:
-                    raise click.ClickException(
-                        f"{table.name}.{column.name} is NOT NULL and cannot be added automatically."
-                    )
-
-                column_sql = f"{quote(column.name)} {column.type.compile(dialect=dialect)}"
-                foreign_key = next(iter(column.foreign_keys), None)
-                target = None
-                if foreign_key is not None:
-                    target = (
-                        f"{quote(foreign_key.column.table.name)} "
-                        f"({quote(foreign_key.column.name)})"
-                    )
-
-                connection.execute(
-                    sa.text(f"ALTER TABLE {quote(table.name)} ADD COLUMN {column_sql}")
-                )
-                if target:
-                    connection.execute(
-                        sa.text(
-                            f"ALTER TABLE {quote(table.name)} ADD FOREIGN KEY "
-                            f"({quote(column.name)}) REFERENCES {target}"
-                        )
-                    )
-                added.append(f"{table.name}.{column.name}")
-
-    return added
 
 
 def _km(lat1, lon1, lat2, lon2):
@@ -273,12 +162,16 @@ def populate_db_core():
     if device is None:
         device = Device(
             device_id=spec["device_id"],
-            push_token=spec["push_token"],
             platform=spec["platform"],
             language=spec["language"],
             app_version=spec["app_version"],
         )
         device.create(commit=False)
+        FcmToken(
+            device_id=spec["device_id"],
+            fcm_token=spec["fcm_token"],
+            notifications_enabled=True,
+        ).create(commit=False)
         click.echo(f"Created sample device: {spec['device_id']}")
     else:
         click.echo("Sample device already exists.")
@@ -365,11 +258,12 @@ def populate_db_core():
                 SELECT 1
                 FROM alert_settings AS a
                 JOIN devices AS d ON d.device_id = a.device_id
+                JOIN fcm_tokens AS ft ON ft.device_id = d.device_id
                 WHERE d.device_id = :device_id
                   AND d.is_active
                   AND a.enabled
                   AND a.min_magnitude <= :magnitude
-                  AND d.push_token IS NOT NULL
+                  AND ft.notifications_enabled
                   AND ST_Intersects(
                         a.area,
                         ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)
@@ -439,16 +333,12 @@ def init_db(force, confirm_text):
     click.echo("Database Created")
 
 
-@click.command("upgrade_db")
+@click.command("update_db")
 @with_appcontext
-def upgrade_db():
-    """CLI: add missing tables and nullable columns without touching existing data."""
-    added = upgrade_db_core()
-    if added:
-        for name in added:
-            click.echo(f"Added column: {name}")
-    else:
-        click.echo("Database schema is up to date.")
+def update_db():
+    """CLI: create tables declared by the current models."""
+    update_db_core()
+    click.echo("Database schema is up to date.")
 
 
 @click.command("populate_db")
