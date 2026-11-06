@@ -37,7 +37,6 @@ class Earthquake(db.Model, BaseModel):
     updated_by_name = db.Column(db.Text, nullable=True)
     updated_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    felt_reports = db.relationship("FeltReport", back_populates="earthquake")
     outbox = db.relationship(
         "NotificationOutbox",
         back_populates="earthquake",

@@ -142,13 +142,49 @@ Circle:
 
 ### `GET /felt-reports/`
 
-აბრუნებს felt reports-ს `reported_at`-ის კლებადობით. Query: `limit` 1–200.
+აბრუნებს felt reports-ს `created_at`-ის კლებადობით. Query: `limit` 1–200.
 
-### `POST /felt-reports/`
+### `POST /devices/{device_id}/felt-report/`
 
-აუცილებელია `intensity` (`MILD`, `MODERATE`, `SEVERE`) და timezone-aware `reported_at`.
-Optional-ია `minutes_ago`, `device_id`, `language` და `platform`.
-`felt_at` სერვერზე ითვლება როგორც `reported_at - minutes_ago`.
+ინახავს კონკრეტული, წინასწარ რეგისტრირებული device-ის felt report-ს.
+`device_id` URL-დან მოდის და request body-ში არ იგზავნება.
+
+აუცილებელი ველებია: `intensity` (`MILD`, `MODERATE`, `SEVERE`),
+`time_ago`, `latitude` და `longitude`.
+`accuracy` optional-ია და არ შეიძლება უარყოფითი იყოს.
+`created_at` response-ში ბრუნდება და სერვერი ავტომატურად ავსებს report-ის
+მიღების მომენტში.
+
+```json
+{
+  "intensity": "MODERATE",
+  "time_ago": 5,
+  "latitude": 41.7151,
+  "longitude": 44.8271,
+  "accuracy": 10
+}
+```
+
+`latitude` უნდა იყოს `-90..90`-ში, `longitude` — `-180..180`-ში.
+კოორდინატები ინახება მხოლოდ `latitude`, `longitude` და `accuracy` ველებში;
+report მიწისძვრას არ უკავშირდება.
+
+### `GET /devices/{device_id}/felt-report/`
+
+აბრუნებს ამ device-ის მიერ გამოგზავნილ report-ებს და მათ საერთო რაოდენობას.
+Query: `limit` 1–200, default `100`. სია დალაგებულია `created_at`-ის
+კლებადობით.
+
+პასუხის ფორმატი:
+
+```json
+{
+  "device_id": "11111111-1111-4111-8111-111111111111",
+  "items": [],
+  "total": 0,
+  "limit": 100
+}
+```
 
 ### `GET /felt-reports/{report_id}`
 

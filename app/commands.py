@@ -21,7 +21,7 @@ from app.models import (
     NotificationAttempt,
     NotificationOutbox,
 )
-from app.utils.geo import multipolygon_from_circle, point_wkb
+from app.utils.geo import multipolygon_from_circle
 
 PUBLISH_EVENTS_URL = "https://iesdata.iliauni.edu.ge:3030/api/publish_events/?limit=5"
 
@@ -219,31 +219,27 @@ def populate_db_core():
     report = FeltReport.query.filter_by(device_id=spec["device_id"]).first()
     if report is None and nearest is not None:
         distance, magnitude, event = nearest
-        origin = _origin_time(event)
-        reported_at = origin + timedelta(minutes=12)
-        minutes_ago = 7
+        time_ago = 7
+        latitude = float(event["latitude"]) + 0.01
+        longitude = float(event["longitude"]) + 0.02
         FeltReport(
             device_id=spec["device_id"],
-            earthquake_id=earthquake.id,
             intensity=_intensity(magnitude, distance),
-            minutes_ago=minutes_ago,
-            reported_at=reported_at,
-            felt_at=reported_at - timedelta(minutes=minutes_ago),
-            location=point_wkb(float(event["longitude"]) + 0.02, float(event["latitude"]) + 0.01),
-            language=spec["language"],
-            platform=spec["platform"],
+            time_ago=time_ago,
+            latitude=latitude,
+            longitude=longitude,
+            accuracy=10,
         ).create(commit=False)
         click.echo(f"Created felt report for earthquake {earthquake.ies_event_id}.")
     elif report is None:
-        reported_at = datetime.now(timezone.utc)
+        latitude, longitude = spec["circle"][1], spec["circle"][0]
         FeltReport(
             device_id=spec["device_id"],
             intensity="MILD",
-            minutes_ago=None,
-            reported_at=reported_at,
-            felt_at=None,
-            language=spec["language"],
-            platform=spec["platform"],
+            time_ago=0,
+            latitude=latitude,
+            longitude=longitude,
+            accuracy=10,
         ).create(commit=False)
         click.echo("Created an unlinked felt report.")
     else:

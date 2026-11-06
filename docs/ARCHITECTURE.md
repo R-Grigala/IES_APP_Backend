@@ -49,5 +49,5 @@ PostgreSQL + PostGIS
 ## მონაცემთა სიცოცხლის ციკლი
 
 - Device-ის წაშლა cascade-ით შლის location settings, alert settings, FCM token-ს და notification outbox-ს.
-- Felt report device/earthquake reference-ის წაშლისას რჩება და შესაბამისი FK `NULL` ხდება.
+- Felt report-ს სავალდებულო device აქვს; device-ის წაშლისას მისი reports-იც იშლება (`ON DELETE CASCADE`). Felt report დამოუკიდებელი ჩანაწერია და earthquake-ს არ უკავშირდება.
 - Earthquake-ის წაშლა cascade-ით შლის notification outbox-სა და attempts-ს.
