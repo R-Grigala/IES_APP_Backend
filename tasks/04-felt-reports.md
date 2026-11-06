@@ -2,23 +2,44 @@
 
 ## რას ვაკეთებთ
 
-ვინახავთ „იგრძენით მიწისძვრა?“ ანგარიშს: ინტენსივობა, როდის იგრძნო, სურვილისამებრ მოწყობილობა და მდებარეობა. კონკრეტულ მიწისძვრასთან კავშირი თავიდან არ იწერება.
+ვინახავთ „იგრძენით მიწისძვრა?“ ანგარიშს, რომელიც კონკრეტულ რეგისტრირებულ
+მოწყობილობას ეკუთვნის.
 
-## როგორ
+## API
 
-აპი გზავნის `intensity` (`MILD`, `MODERATE`, `SEVERE`), `reported_at` და `minutes_ago`.
+```http
+POST /api/v1/devices/{device_id}/felt-report/
+Content-Type: application/json
+```
 
-`felt_at` სერვერი ითვლის, კლიენტი არ გზავნის:
+`device_id` URL-ში იგზავნება. Body-ში იგზავნება `intensity`, `time_ago`,
+`latitude`, `longitude` და optional `accuracy`.
+`created_at` body-ში არ იგზავნება — მას სერვერი ავტომატურად წერს report-ის
+შექმნისას.
 
-- `minutes_ago` შევსებულია → `felt_at = reported_at - minutes_ago წუთი`
-- „1 საათზე მეტი“ → `minutes_ago` არის `NULL`, `felt_at`-იც `NULL` რჩება
+```json
+{
+  "intensity": "MODERATE",
+  "time_ago": 5,
+  "latitude": 41.7151,
+  "longitude": 44.8271,
+  "accuracy": 10
+}
+```
 
-`location` ცარიელია, სანამ აპი მდებარეობას არ გზავნის. სვეტი `geometry(Point, 4326)`-ია, რომ მერე შევსება სქემის შეცვლას არ საჭიროებდეს.
+`intensity` არის `MILD`, `MODERATE` ან `SEVERE`; `time_ago` და `accuracy` არ
+შეიძლება იყოს უარყოფითი. Latitude-ის დიაპაზონია `-90..90`, longitude-ის —
+`-180..180`. სერვერი ამოწმებს device-ის არსებობას, ინახავს კოორდინატებს და
+კოორდინატები ინახება მხოლოდ `latitude`, `longitude` და `accuracy` ველებში;
+PostGIS `location` ან `earthquake_id` report-ს არ აქვს.
 
-`event_id` ჩაწერისას `NULL`-ია. სეისმოლოგი ან სკრიპტი მოგვიანებით წერს `event.id`-ს `GET /api/publish_events/`-იდან, `felt_at`-ისა და `location`-ის მიხედვით. ეს ჩვეულებრივი `integer`-ია: მიწისძვრის წაშლა ან გამოქვეყნების მოხსნა ამ ანგარიშს არ ეხება.
+პასუხები: `201` წარმატებაზე, `400` არასწორ მონაცემებზე და `404` უცნობ device-ზე.
 
-`device_id` სურვილისამებრია. მოწყობილობის წაშლისას ანგარიში რჩება და `device_id` ხდება `NULL`. `language` და `platform` ანგარიშზე იმ მომენტის ასლია, რომ მოწყობილობის მერე შეცვლამ ძველი ანგარიში არ გადააკეთოს.
+მოწყობილობის report-ების სანახავად გამოიყენება:
 
-## მზადაა, როცა
+```http
+GET /api/v1/devices/{device_id}/felt-report/?limit=100
+```
 
-ანგარიში იწერება `event_id`-ს და `location`-ის გარეშე, `felt_at` სერვერზე გამოითვლება, და „1 საათზე მეტი“ `felt_at = NULL`-ს ტოვებს.
+პასუხში მოდის `device_id`, report-ების სრული რაოდენობა `total`-ში და ბოლო
+report-ები `items`-ში, `created_at`-ის კლებადობით.

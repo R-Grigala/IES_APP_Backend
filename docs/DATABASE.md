@@ -31,7 +31,11 @@ One-to-one device alert configuration. ინახავს `enabled`, `min_mag
 
 ### `felt_reports`
 
-მომხმარებლის report. `device_id` და `earthquake_id` nullable FK-ებია `ON DELETE SET NULL` წესით. Location არის `POINT`, SRID 4326.
+მომხმარებლის report. ინახავს სავალდებულო `device_id`-ს, `intensity`-ს,
+`time_ago`-ს, server-side `created_at`-ს და frontend-იდან
+მიღებულ latitude/longitude/accuracy-ს. Report ცალკე ინახება და მიწისძვრას არ
+უკავშირდება. `created_at` არის სერვერზე report-ის მიღების დრო.
+`intensity` არის `MILD`, `MODERATE` ან `SEVERE`.
 
 ### `notification_outbox`
 

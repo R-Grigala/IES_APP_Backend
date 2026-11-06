@@ -9,7 +9,7 @@ PostGIS და ეს ცხრილები: `devices`, `fcm_tokens`, `locati
 ## როგორ
 
 - გეომეტრია SRID 4326-ია: ზონა `MultiPolygon`, ანგარიშის წერტილი `Point`.
-- `felt_reports.device_id` და `felt_reports.earthquake_id` არის `ON DELETE SET NULL`.
+- `felt_reports.device_id` სავალდებულო FK-ია `ON DELETE CASCADE` წესით.
 - `earthquakes.ies_event_id` არის iesdata-ს `event.id` და უნიკალურია. ლოკალური `earthquakes.id` სხვა ცხრილების გასაღებია.
 - მაგნიტუდის ერთი წყვილი ინახება მიწისძვრაზე: ჯერ `ML`, თუ არ არის — პირველი მნიშვნელობა. მოთხოვნაში `magnitudes` მასივია.
 - `created_by` და `updated_by` არის `user` ან `service` და სახელი. `updated_at` ივსება მაშინ, როცა განახლების ავტორიც მოდის.

@@ -49,30 +49,12 @@ def multipolygon_from_geojson(geojson):
     return _wkb(raw)
 
 
-def point_wkb(longitude, latitude):
-    raw = db.session.execute(
-        text("SELECT ST_AsEWKB(ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326))"),
-        {"longitude": longitude, "latitude": latitude},
-    ).scalar()
-    return _wkb(raw)
-
-
 def multipolygon_from_circle(longitude, latitude, radius_m):
     raw = db.session.execute(
         text(_CIRCLE),
         {"longitude": longitude, "latitude": latitude, "radius_m": radius_m},
     ).scalar()
     return _wkb(raw)
-
-
-def location_geojson(report_id):
-    raw = db.session.execute(
-        text("SELECT ST_AsGeoJSON(location) FROM felt_reports WHERE id = :id"),
-        {"id": report_id},
-    ).scalar()
-    if not raw:
-        return None
-    return json.loads(raw)
 
 
 def area_geojson(device_id):

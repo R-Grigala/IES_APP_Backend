@@ -35,7 +35,8 @@ Swagger: `http://127.0.0.1:5000/docs/`
 | PUT | `/api/v1/devices/<id>/alert-settings` | one polygon and minimum magnitude |
 | GET | `/api/v1/felt-reports/` | stored felt reports (`?limit=`) |
 | GET | `/api/v1/felt-reports/<id>` | one felt report |
-| POST | `/api/v1/felt-reports/` | a felt report; `felt_at` is calculated on the server |
+| POST | `/api/v1/devices/<device_id>/felt-report/` | submit a felt report for a device |
+| GET | `/api/v1/devices/<device_id>/felt-report/` | list reports submitted by a device (`?limit=`) |
 | GET, POST | `/api/v1/earthquakes/` | list earthquakes, or store a new one |
 | GET, PUT, DELETE | `/api/v1/earthquakes/<event_id>` | one earthquake; PUT replaces it, DELETE removes it |
 | GET | `/api/v1/notifications/stats` | totals, status counts, and counts per earthquake |
@@ -122,9 +123,20 @@ and `10`; `enabled` defaults to `true`.
 
 ### Felt reports
 
-`POST /api/v1/felt-reports/` accepts `intensity`, timezone-aware `reported_at`,
-optional non-negative `minutes_ago`, and optional device/location metadata.
-When `minutes_ago` is provided, the server calculates `felt_at`.
+`POST /api/v1/devices/{device_id}/felt-report/` accepts `intensity`,
+non-negative `time_ago`, `latitude`, `longitude`, and optional non-negative
+`accuracy`. The `device_id` is taken from the URL and
+must belong to a registered device.
+
+```json
+{
+  "intensity": "MODERATE",
+  "time_ago": 5,
+  "latitude": 41.7151,
+  "longitude": 44.8271,
+  "accuracy": 10
+}
+```
 
 ### Earthquakes
 
